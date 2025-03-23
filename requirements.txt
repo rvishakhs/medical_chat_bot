@@ -1,5 +1,6 @@
 ctransformers==0.2.5
 sentence-transformers==2.2.2
-pinecone-client
 langchain==0.0.225
 flask
+chromadb==0.6.3
+tiktoken-0.9.0
