@@ -11,7 +11,7 @@ list_of_files = [
     "setup.py",
     "app.py",
     "store_index.py",
-    "static",
+    "static/.gitkeep",
     "templates/chat.html",
 ]
 
@@ -22,8 +22,8 @@ for filepath in list_of_files:
     if filedir !="":
         os.makedirs(filedir, exist_ok=True)
         logging.info(f"Created directory: {filedir}")
-    if (not os.path.exists(filepath)) or (os.path.getsize(file) == 0):
-        with open(filepath, 'w') as f:
+    if (not os.path.exists(path)) or (os.path.getsize(path) == 0):
+        with open(path, 'w') as f:
             pass
             logging.info(f"Created file: {file}")
     else:

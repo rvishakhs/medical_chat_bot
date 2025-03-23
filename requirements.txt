@@ -1,7 +1,8 @@
-ctransformers==0.2.5
-sentence-transformers==2.2.2
-langchain==0.0.225
+sentence-transformers
+langchain
 flask
-chromadb==0.6.3
+chromadb
 langchain_community
 pypdf
+
+-e . 

@@ -1,0 +1,9 @@
+Metadata-Version: 2.4
+Name: Medical_chat_bot
+Version: 0.1
+Author: Visakh Nair
+Author-email: me@visakhsr.com
+License-File: LICENSE
+Dynamic: author
+Dynamic: author-email
+Dynamic: license-file
