@@ -24,9 +24,11 @@ collection.add(
 )
 
 def get_query_results(question):
-    collection.query(
-    query_texts=[question],
-    n_results=5,
-    where={"metadata_field": "is_equal_to_this"},
-    where_document={"$contains":"search_string"}
-)
+    results = collection.query(
+        query_texts=[question],
+        n_results=5,
+        where={"metadata_field": "is_equal_to_this"},
+        where_document={"$contains":"search_string"}
+    )
+    
+    return results
