@@ -7,7 +7,8 @@ from langchain.chains import RetrievalQA
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.memory import VectorStoreRetrieverMemory
 from langchain_groq.chat_models import ChatGroq
-#from langchain.chains import ConversationalRetrievalChain
+from langchain.memory import ConversationBufferMemory
+from langchain.chains import ConversationalRetrievalChain
 from src.prompt import * 
 #from langchain_community.vectorstores import Chroma
 from langchain_chroma import Chroma
@@ -30,7 +31,7 @@ vectordb = Chroma(
     persist_directory=persistant_db,
 )
 
-retriever = vectordb.as_retriever(search_kwargs={'k': 2})
+#retriever = vectordb.as_retriever(search_kwargs={'k': 2})
 
 Prompt = PromptTemplate(template=prompt_template, input_variables=["context", "question"])
 
@@ -38,11 +39,9 @@ chain_type_kwargs = {"prompt" : Prompt}
 
 # Initialize Memory
 
-# Set up memory using vectorstore retriever
-# retriever_memory = VectorStoreRetrieverMemory(
-#     retriever=retriever,
-#     memory_key="chat_history"
-# )
+memory = ConversationBufferMemory(memory_key="chat_history",output_key="result")
+
+
 # LLm section 
 
 llm = ChatGroq(
@@ -54,16 +53,24 @@ llm = ChatGroq(
 qa_chain=RetrievalQA.from_chain_type(
     llm=llm, 
     chain_type="stuff", 
-    retriever=retriever,
+    retriever=vectordb.as_retriever(search_kwargs={'k': 2}),
     return_source_documents=True, 
-    chain_type_kwargs=chain_type_kwargs)
+    chain_type_kwargs=chain_type_kwargs,
+    memory=memory,
+    )
 
 
-# conv_qa_chain = ConversationalRetrievalChain.from_llm(
-#     llm=llm,
-#     retriever=vectordb.as_retriever(),
-#     memory=retriever_memory
-# )
+# Create the Conversational Retrieval Chain with the Custom Prompt
+# Conversational Chain
+conv_qa_chain = ConversationalRetrievalChain.from_llm(
+    llm=llm,
+    retriever=vectordb.as_retriever(search_kwargs={'k': 2}),
+    memory=memory,
+    combine_docs_chain_kwargs=chain_type_kwargs,
+    return_source_documents=True
+)
+
+chat_history = []
 
 # App Routing 
 @app.route('/')
@@ -73,9 +80,7 @@ def index():
 @app.route('/get', methods=['GET', 'POST'])
 def chat():
     msg = request.form['msg']
-    input = msg
-    print(input)
-    result=qa_chain.invoke({"query":input})
+    result = conv_qa_chain.invoke({"question": msg})
     return str(result["result"])
 
 
