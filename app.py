@@ -3,6 +3,7 @@ from langchain import PromptTemplate
 from langchain.chains import RetrievalQA
 from langchain.vectorstores import Chroma
 from langchain.embeddings import HuggingFaceEmbeddings
+from langchain.memory import ConversationBufferMemory
 from langchain_groq.chat_models import ChatGroq
 from src.prompt import * 
 import chromadb
@@ -30,17 +31,22 @@ Prompt = PromptTemplate(template=prompt_template, input_variables=["context", "q
 
 chain_type_kwargs = {"prompt" : Prompt}
 
-llm = ChatGroq(
-    model="deepseek-r1-distill-llama-70b",
-    temperature=0.5,
+# Initialize Memory
+memory = ConversationBufferMemory(memory_key="chat_history",output_key="result", return_messages=True)
 
+llm = ChatGroq(
+    model="llama-3.3-70b-versatile",
+    temperature=0.5,
+    verbose=False
 )
 
 qa_chain = RetrievalQA.from_chain_type(
     llm=llm,
     retriever=retriever,
     chain_type="stuff",
-    return_source_documents=True
+    return_source_documents=True,
+    chain_type_kwargs=chain_type_kwargs,
+    memory=memory
 )
 
 
@@ -54,9 +60,9 @@ def chat():
     msg = request.form['msg']
     input = msg
     print(input)
-    result=qa_chain({"query":input})
+    result=qa_chain.invoke({"query":input})
     return str(result["result"])
 
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0",port=8080, debug=True)
+    app.run(host="0.0.0.0",port=8080, debug=False)

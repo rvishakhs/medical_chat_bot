@@ -1,11 +1,10 @@
 prompt_template = """
-Use the following pieces of information to answer the user's question. Remeber you are dealing with a medical related 
-questions so try to get as much as details and provide them in a simple and understanble way.
-If you don't know the answer, Just say that you don't know. don't make the answer.
+Use the following pieces of information to answer the user's question.
+If you don't know the answer, just say that you don't know, don't try to make up an answer.
 
-context: {context}
-question: {question}
+Context: {context}
+Question: {question}
 
-Only return the helpfull answer below and nothing else. 
-Helpful answer
+Only return the helpful answer below and nothing else.
+Helpful answer:
 """
