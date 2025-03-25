@@ -1,11 +1,16 @@
 from flask import Flask, render_template, jsonify, request
-from langchain import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
-from langchain.vectorstores import Chroma
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.memory import ConversationBufferMemory
+#from langchain.vectorstores import Chroma
+#from langchain.embeddings import HuggingFaceEmbeddings
+#from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain.memory import VectorStoreRetrieverMemory
 from langchain_groq.chat_models import ChatGroq
+#from langchain.chains import ConversationalRetrievalChain
 from src.prompt import * 
+#from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 import chromadb
 import os
 
@@ -25,14 +30,20 @@ vectordb = Chroma(
     persist_directory=persistant_db,
 )
 
-retriever = vectordb.as_retriever()
+retriever = vectordb.as_retriever(search_kwargs={'k': 2})
 
 Prompt = PromptTemplate(template=prompt_template, input_variables=["context", "question"])
 
 chain_type_kwargs = {"prompt" : Prompt}
 
 # Initialize Memory
-memory = ConversationBufferMemory(memory_key="chat_history",output_key="result", return_messages=True)
+
+# Set up memory using vectorstore retriever
+# retriever_memory = VectorStoreRetrieverMemory(
+#     retriever=retriever,
+#     memory_key="chat_history"
+# )
+# LLm section 
 
 llm = ChatGroq(
     model="llama-3.3-70b-versatile",
@@ -40,15 +51,19 @@ llm = ChatGroq(
     verbose=False
 )
 
-qa_chain = RetrievalQA.from_chain_type(
-    llm=llm,
+qa_chain=RetrievalQA.from_chain_type(
+    llm=llm, 
+    chain_type="stuff", 
     retriever=retriever,
-    chain_type="stuff",
-    return_source_documents=True,
-    chain_type_kwargs=chain_type_kwargs,
-    memory=memory
-)
+    return_source_documents=True, 
+    chain_type_kwargs=chain_type_kwargs)
 
+
+# conv_qa_chain = ConversationalRetrievalChain.from_llm(
+#     llm=llm,
+#     retriever=vectordb.as_retriever(),
+#     memory=retriever_memory
+# )
 
 # App Routing 
 @app.route('/')
