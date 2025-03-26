@@ -39,7 +39,7 @@ chain_type_kwargs = {"prompt" : Prompt}
 
 # Initialize Memory
 
-memory = ConversationBufferMemory(memory_key="chat_history",output_key="result")
+memory = ConversationBufferMemory(memory_key="chat_history", output_key="answer", return_messages=True)
 
 
 # LLm section 
@@ -50,14 +50,14 @@ llm = ChatGroq(
     verbose=False
 )
 
-qa_chain=RetrievalQA.from_chain_type(
-    llm=llm, 
-    chain_type="stuff", 
-    retriever=vectordb.as_retriever(search_kwargs={'k': 2}),
-    return_source_documents=True, 
-    chain_type_kwargs=chain_type_kwargs,
-    memory=memory,
-    )
+# qa_chain=RetrievalQA.from_chain_type(
+#     llm=llm, 
+#     chain_type="stuff", 
+#     retriever=vectordb.as_retriever(search_kwargs={'k': 2}),
+#     return_source_documents=True, 
+#     chain_type_kwargs=chain_type_kwargs,
+#     memory=memory,
+#     )
 
 
 # Create the Conversational Retrieval Chain with the Custom Prompt
@@ -70,7 +70,7 @@ conv_qa_chain = ConversationalRetrievalChain.from_llm(
     return_source_documents=True
 )
 
-chat_history = []
+chat_history = [ ]
 
 # App Routing 
 @app.route('/')
@@ -80,8 +80,22 @@ def index():
 @app.route('/get', methods=['GET', 'POST'])
 def chat():
     msg = request.form['msg']
-    result = conv_qa_chain.invoke({"question": msg})
-    return str(result["result"])
+
+    # formatted_history = []
+    # for item in chat_history:
+    #     # Add "Human" as user role and "AI" as assistant role
+    #     formatted_history.append({"role": "user", "content": item[0]})
+    #     formatted_history.append({"role": "assistant", "content": item[1]})
+
+    # Pass the chain history to the chain
+    result = conv_qa_chain.invoke({
+        'question': msg,
+        'chat_history': chat_history
+    })
+
+    # Append the result to the chat history (input, response pair)
+    chat_history.append((f"Human: {msg}", f"AI: {result['answer']}"))
+    return str(result["answer"])
 
 
 if __name__ == '__main__':
